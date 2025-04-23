@@ -1,0 +1,39 @@
+/* src/index.css */
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background: black; /* optional but sets a nice mood */
+  font-family: sans-serif;
+}
+canvas {
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.tooltip {
+  background-color: rgba(0, 0, 0, 0.85);
+  color: white;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  max-width: 900px;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  text-align: center;
+  white-space: normal;
+  word-wrap: break-word;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.tooltip strong {
+  display: block;
+  font-weight: 600;
+  color: #f0f0f0;
+  margin-bottom: 2px;
+}
