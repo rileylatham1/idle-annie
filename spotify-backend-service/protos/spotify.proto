@@ -1,0 +1,57 @@
+syntax = "proto3";
+
+package spotify_grpc;
+
+service SpotifyAuth {
+  rpc ExchangeCode (AuthCodeRequest) returns (AuthResponse)  {}
+  rpc GetLikedTracks(LikedTracksRequest) returns (LikedTracksResponse) {}
+  rpc PlayNextTrack(PlayNextTrackRequest) returns (PlayNextTrackResponse) {}
+}
+
+message AuthCodeRequest {
+  string code = 1;
+}
+
+message AuthResponse {
+  string session_token = 1;
+  bool success = 2;
+}
+
+message LikedTracksRequest {
+  string access_token = 1;
+  int32 total = 2;
+}
+
+message Track {
+  string name = 1;
+  string artist = 2;
+  Album album = 3;
+  string id = 4;
+  string uri = 5;
+}
+
+message LikedTracksResponse {
+  repeated Track tracks = 1;
+  bool success = 2;
+}
+
+message AlbumImages {
+  repeated string url = 1;
+}
+
+message Album {
+  string name = 1;
+  string uri = 2;
+  string id = 3;
+  AlbumImages images = 4;
+}
+
+message PlayNextTrackRequest {
+  string access_token = 1;
+  string current_track_uri = 2;
+  repeated string uris = 3; // Pass full liked song list here
+}
+
+message PlayNextTrackResponse {
+  bool success = 1;
+}

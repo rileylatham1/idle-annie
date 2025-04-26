@@ -1,55 +1,134 @@
-# React + TypeScript + Vite
+# 🎵 Spotify Explorer (gRPC + React + FastAPI)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This is a Three.js-powered web app that connects to your Spotify account and lets you explore and play your liked songs in an interactive grid. Built with:
 
-Currently, two official plugins are available:
+- ⚙️ **Python gRPC backend** for Spotify API access  
+- 🌐 **FastAPI proxy server**  
+- 🎨 **React + Three.js frontend**  
+- 🔐 Auth via Spotify Authorization Code Flow  
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+---
 
-## Expanding the ESLint configuration
+## 🧱 Features
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- Browse liked songs with album art in a 3D tile grid  
+- Click to play songs directly from your Spotify library  
+- Next track playback using gRPC  
+- Clean service separation and modular architecture  
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
-```
+---
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## 🚀 Getting Started
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### Clone the Repository and Generate the Proto Files
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
-```
-# idle-annie
+> 🖥️ Terminal
+> 
+> git clone https://github.com/rileylatham1/idle-annie.git
+> cd spotify-grpc-app
+> 
+> cd backend
+> ./generate_proto.sh
+
+✅ This generates the Python gRPC code from \`.proto\` definitions. Make sure \`grpcio-tools\` is installed.
+
+---
+
+## 📦 Requirements
+
+- Python 3.10+
+- Node.js + Yarn
+- Spotify Developer App  
+  → [Create one here](https://developer.spotify.com/dashboard)
+
+---
+
+## 🧰 Running the App
+
+There are 3 main services:
+
+1. **gRPC Server**  
+2. **FastAPI Proxy Server**  
+3. **Frontend App (React + Three.js)**  
+
+You can either start them manually in 3 terminals, or run them all with:
+
+> 🖥️ Terminal
+> 
+> ```bash
+> ./dev.sh
+> ```
+---
+
+:bug: If this doesn't work you may need to give it executable access! Check out what's inside before granting any file this privelege.
+
+> 🖥️ Terminal
+> 
+> chmod +x dev.sh
+>
+
+
+### ✅ Manual Start (Alternative)
+
+#### Terminal 1: gRPC Server
+> 🖥️ Terminal
+> 
+> ```bash
+> cd backend
+> python server.py
+> ```
+
+#### Terminal 2: Proxy API Server
+> 🖥️ Terminal
+> 
+> ```bash
+> cd proxy
+> uvicorn main:app --reload
+> ```
+
+#### Terminal 3: Frontend
+> 🖥️ Terminal
+> 
+> cd frontend
+> yarn install
+> yarn dev
+> 
+
+Visit: [http://localhost:5173](http://localhost:5173)
+
+---
+
+## ⚙️ Environment Setup
+
+Create a \`.env\` file inside the \`proxy/\` directory:
+
+> ⚙️ .env file
+> VITE_SPOTIFY_CLIENT_ID=your_spotify_client_id
+> VITE_SPOTIFY_CLIENT_SECRET=your_spotify_client_secret
+> SPOTIFY_REDIRECT_URI=http://localhost:5173/callback
+>
+
+You'll also need to add your spotify redirect uri to the list of redirect apis on your spotify developer dashboard!
+
+---
+
+## 🧪 Testing
+
+- Frontend test: click tiles to play songs  
+- Server logs: backend/server.py and proxy/main.py will show auth/playback flow  
+
+---
+
+## ✨ Roadmap
+
+- [x] Liked songs explorer  
+- [x] Playback with gRPC  
+- [ ] Playlist browsing  
+- [ ] Dockerized deployment  
+- [ ] CI with GitHub Actions  
+
+---
+
+## 📜 License
+
+MIT © Riley Latham, lathamri@msu.edu

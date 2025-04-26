@@ -1,18 +1,18 @@
-export async function playTrack(trackContextUri: string, token: string) {
-  const res = await fetch('https://api.spotify.com/v1/me/player/play', {
-    method: 'PUT',
+export async function playNextTrack(currentUri: string, allUris: string[], token: string) {
+  const res = await fetch("http://localhost:8000/tracks/play-next", {
+    method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json"
     },
     body: JSON.stringify({
-      // context_uri: albumContextUri,
-      uris: [trackContextUri],
-    }),
+      access_token: token,
+      current_track_uri: currentUri,
+      uris: allUris,
+    })
   });
-  console.log('playTrack res', res)
-  
+
   if (!res.ok) {
-    throw new Error('Failed to start playback');
+    throw new Error("Failed to start next track playback");
   }
 }

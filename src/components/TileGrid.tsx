@@ -31,7 +31,7 @@ export const TileGrid: React.FC<TileGridProps> = ({
       tracks.map(
         (track) =>
           new Promise<THREE.Texture>((resolve) => {
-            loader.load(track.track.album.images[0]?.url, resolve)
+            loader.load(track.album.images[0]?.url, resolve)
           })
       )
     ).then((loadedTextures) => {
@@ -107,8 +107,8 @@ export const TileGrid: React.FC<TileGridProps> = ({
               }}
               texture={textures.current[i]!}
               tileSize={tileSize}
-              track={track.track}
-              onClick={() => onPlayTrack?.(track.track.uri)}
+              track={track}
+              onClick={() => onPlayTrack?.(track.uri)}
             />
           )
         })

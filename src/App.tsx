@@ -6,11 +6,10 @@ import { DragCameraControls } from './utils/DragCameraControls'
 import './index.css'
 import {
   getAccessToken,
-  exchangeCodeForToken,
   redirectToSpotifyAuth,
 } from './hooks/spotifyAccessToken'
 import { fetchUserLikedTracks } from './hooks/spotifyApi'
-import { playTrack } from './hooks/spotifyPlayer'
+import { playNextTrack } from './hooks/spotifyPlayer'
 import { TrackInfo } from './types/spotifyTypes'
 
 const App: React.FC = () => {
@@ -27,8 +26,23 @@ const App: React.FC = () => {
 
       if (!token && code) {
         try {
-          token = await exchangeCodeForToken(code)
-          // 🚿 Clean up URL after token exchange
+          // Send code to FastAPI backend (which uses gRPC behind the scenes)
+          const response = await fetch('http://127.0.0.1:8000/auth/exchange', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code }),
+          })
+          const data = await response.json()
+
+          if (data.success && data.session_token) {
+            token = data.session_token
+            if (token) {
+              localStorage.setItem('access_token', token)
+            }
+            localStorage.setItem('expires_at', (Date.now() + 3600 * 1000).toString()) // ⏱️ Assume 1 hour expiry
+          }
+
+          // 🚿 Clean up URL
           window.history.replaceState({}, '', window.location.pathname)
         } catch (err) {
           console.error('Token exchange failed:', err)
@@ -37,16 +51,13 @@ const App: React.FC = () => {
 
       if (!token) {
         // 🔐 Kick off login if no token
-        console.log(import.meta.env.VITE_SPOTIFY_CLIENT_ID)
-        console.log(import.meta.env.VITE_SPOTIFY_CLIENT_SECRET)
         redirectToSpotifyAuth()
         return
       }
 
       try {
         const fetchedTracks = await fetchUserLikedTracks(token, 500)
-        const arts = fetchedTracks.map((item) => item.track.album.images[0]?.url)
-        console.log('fetchedTracks', fetchedTracks)
+        const arts = fetchedTracks.map((item) => item.album.images[0]?.url)
         setAlbumTracks(fetchedTracks)
         setAlbumArts(arts)
       } catch (err) {
@@ -62,9 +73,9 @@ const App: React.FC = () => {
       <DragCameraControls />
       <fog attach="fog" args={['black', 5, 50]} />
       <ambientLight />
-      {albumArts.length > 0 && <TileGrid tracks={likedTracks} onPlayTrack={(trackContextUri) => {
-        playTrack(trackContextUri, localStorage.access_token)
-      }}/>}
+      {albumArts.length > 0 && <TileGrid tracks={likedTracks} onPlayTrack={(trackUri) => {
+  playNextTrack(trackUri, likedTracks.map(track => track.uri), localStorage.access_token);
+}}/>}
     </Canvas>
   )
 }

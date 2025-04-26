@@ -1,5 +1,4 @@
 export type TrackInfo = {
-    track: {
       id: string
       name: string
       artist: string
@@ -10,5 +9,4 @@ export type TrackInfo = {
         id: string
         name: string
       }
-    }
   }

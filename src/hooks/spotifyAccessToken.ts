@@ -57,32 +57,6 @@ export function getRefreshToken(): string | null {
   return localStorage.getItem('refresh_token')
 }
 
-// Exchange authorization code for access token
-export async function exchangeCodeForToken(code: string): Promise<string> {
-  const basicAuth = btoa(`${clientId}:${clientSecret}`)
-
-  const response = await fetch('https://accounts.spotify.com/api/token', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Basic ${basicAuth}`,
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    body: new URLSearchParams({
-      grant_type: 'authorization_code',
-      code,
-      redirect_uri: redirectUri,
-    }),
-  })
-
-  if (!response.ok) {
-    throw new Error('Failed to exchange code for access token')
-  }
-
-  const tokens: SpotifyTokenResponse = await response.json()
-  storeTokens(tokens)
-  return tokens.access_token
-}
-
 // Refresh access token using refresh token
 export async function refreshAccessToken(refreshToken: string): Promise<string> {
   const basicAuth = btoa(`${clientId}:${clientSecret}`)

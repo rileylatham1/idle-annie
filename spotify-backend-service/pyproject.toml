@@ -1,0 +1,10 @@
+[project]
+name = "spotify-backend"
+version = "0.1.0"
+dependencies = [
+  "grpcio",
+  "grpcio-tools",
+  "requests",
+  "redis",
+  "python-dotenv"
+]
