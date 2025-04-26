@@ -8,7 +8,7 @@ import { TrackInfo } from '../types/spotifyTypes'
 type TileGridProps = {
   tracks: TrackInfo[]
   tileSize?: number
-  onPlayTrack?: (trackContextUri: string) => void
+  onPlayTrack?: (track: TrackInfo) => void
 }
 const REPEAT_GRID_COUNT = 3 // how many times to repeat in each direction
 
@@ -108,7 +108,7 @@ export const TileGrid: React.FC<TileGridProps> = ({
               texture={textures.current[i]!}
               tileSize={tileSize}
               track={track}
-              onClick={() => onPlayTrack?.(track.uri)}
+              onClick={() => onPlayTrack?.(track)}
             />
           )
         })

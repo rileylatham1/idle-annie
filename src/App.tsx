@@ -1,9 +1,8 @@
 // src/App.tsx
-import { useEffect, useState } from 'react'
-import { Canvas } from '@react-three/fiber'
+import { useEffect, useState, useRef } from 'react'
+import { Canvas, useThree } from '@react-three/fiber'
 import { TileGrid } from './components/TileGrid'
 import { DragCameraControls } from './utils/DragCameraControls'
-import './index.css'
 import {
   getAccessToken,
   redirectToSpotifyAuth,
@@ -11,10 +10,37 @@ import {
 import { fetchUserLikedTracks } from './hooks/spotifyApi'
 import { playNextTrack } from './hooks/spotifyPlayer'
 import { TrackInfo } from './types/spotifyTypes'
+import { FocusedTrackScene } from './components/FocusedTrackScene'
+import './index.css'
+
+type SceneState = 'grid' | 'focused'
+
+// Component to adjust the camera depending on whether a track is focused
+const AdjustCamera: React.FC<{ scene: SceneState }> = ({ scene }) => {
+  const { camera } = useThree()
+  const prevScene = useRef<SceneState | null>(null)
+
+  useEffect(() => {
+    if (scene !== prevScene.current) {
+      if (scene === 'focused') {
+        camera.position.set(0, 0, 8)
+        camera.lookAt(0, 0, 0)
+      } else if (scene === 'grid') {
+        camera.position.set(25, 10, 10)
+        camera.lookAt(0, 0, 0)
+      }
+      prevScene.current = scene
+    }
+  }, [scene, camera])
+
+  return null
+}
 
 const App: React.FC = () => {
   const [albumArts, setAlbumArts] = useState<string[]>([])
   const [likedTracks, setAlbumTracks] = useState<TrackInfo[]>([])
+  const [scene, setScene] = useState<SceneState>('grid')
+  const [activeTrack, setActiveTrack] = useState<TrackInfo | null>(null)
 
   useEffect(() => {
     const init = async () => {
@@ -70,12 +96,39 @@ const App: React.FC = () => {
 
   return (
     <Canvas camera={{ position: [25, 10, 10], fov: 90 }}>
-      <DragCameraControls />
       <fog attach="fog" args={['black', 5, 50]} />
-      <ambientLight />
-      {albumArts.length > 0 && <TileGrid tracks={likedTracks} onPlayTrack={(trackUri) => {
-  playNextTrack(trackUri, likedTracks.map(track => track.uri), localStorage.access_token);
-}}/>}
+      
+      {/* Lights */}
+      <ambientLight intensity={0.4} />
+      <directionalLight position={[10, 10, 5]} intensity={1.2} />
+
+      {/* Control camera position depending on view */}
+      <AdjustCamera scene={scene} />
+
+      {/* Only enable drag controls in grid view */}
+      {scene === 'grid' && <DragCameraControls />}
+
+
+      {scene === 'grid' && albumArts.length > 0 && !activeTrack && (
+        <TileGrid
+          tracks={likedTracks}
+          onPlayTrack={(track) => {
+            playNextTrack(track.uri, likedTracks.map(track => track.uri), localStorage.access_token)
+            setActiveTrack(track)
+            setScene('focused')
+          }}
+        />
+      )}
+
+      {scene === 'focused' && activeTrack && (
+        <FocusedTrackScene
+          track={activeTrack}
+          onBack={() => {
+            setScene('grid')
+            setActiveTrack(null)
+          }}
+        />
+      )}
     </Canvas>
   )
 }
