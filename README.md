@@ -2,19 +2,19 @@
 
 This is a Three.js-powered web app that connects to your Spotify account and lets you explore and play your liked songs in an interactive grid. Built with:
 
-- ⚙️ **Python gRPC backend** for Spotify API access  
+- ⚙️ **Python gRPC backend for Spotify API access**  
 - 🌐 **FastAPI proxy server**  
 - 🎨 **React + Three.js frontend**  
-- 🔐 Auth via Spotify Authorization Code Flow  
+- 🔐 **Auth via Spotify Authorization Code Flow**
 
 ---
 
 ## 🧱 Features
 
-- Browse liked songs with album art in a 3D tile grid  
-- Click to play songs directly from your Spotify library  
-- Next track playback using gRPC  
-- Clean service separation and modular architecture  
+- **Browse liked songs with album art in a 3D tile grid**
+- **Click to play songs directly from your Spotify library**
+- **Next track playback using gRPC**
+- **Clean service separation and modular architecture**
 
 ---
 
@@ -24,11 +24,11 @@ This is a Three.js-powered web app that connects to your Spotify account and let
 
 > 🖥️ Terminal
 > 
+> ```bash
 > git clone https://github.com/rileylatham1/idle-annie.git
-> cd spotify-grpc-app
-> 
-> cd backend
+> cd cd idle-annie
 > ./generate_proto.sh
+>```
 
 ✅ This generates the Python gRPC code from \`.proto\` definitions. Make sure \`grpcio-tools\` is installed.
 
@@ -36,11 +36,12 @@ This is a Three.js-powered web app that connects to your Spotify account and let
 
 ## 📦 Requirements
 
+- Spotify Developer App
+  → [Create one here](https://developer.spotify.com/dashboard)
 - Python 3.10+
 - Node.js + Yarn
-- Spotify Developer App  
-  → [Create one here](https://developer.spotify.com/dashboard)
-
+- *Optional*
+  → [UV](https://docs.astral.sh/uv/) (for running 🖥️ dev.sh)
 ---
 
 ## 🧰 Running the App
@@ -56,6 +57,7 @@ You can either start them manually in 3 terminals, or run them all with:
 > 🖥️ Terminal
 > 
 > ```bash
+> !#idle-annie
 > ./dev.sh
 > ```
 ---
@@ -64,37 +66,54 @@ You can either start them manually in 3 terminals, or run them all with:
 
 > 🖥️ Terminal
 > 
+> ```bash
+> !#idle-annie
 > chmod +x dev.sh
->
+> ```
 
 
 ### ✅ Manual Start (Alternative)
+
+#### First Time?
+
+Generate protos the first time you run the app and every time you update!
+
+> 🖥️ Terminal
+> 
+> ```bash
+> !#idle-annie
+> ./generate_protos.sh
+> ```
 
 #### Terminal 1: gRPC Server
 > 🖥️ Terminal
 > 
 > ```bash
-> cd backend
-> python server.py
+> !#idle-annie/spotify-backend-service
+> source .venv/bin/activate
+> python main.py
 > ```
 
 #### Terminal 2: Proxy API Server
 > 🖥️ Terminal
 > 
 > ```bash
-> cd proxy
-> uvicorn main:app --reload
+> !#idle-annie/spotify-backend-service
+> source .venv/bin/activate
+> uvicorn proxy:app --reload
 > ```
 
 #### Terminal 3: Frontend
 > 🖥️ Terminal
 > 
-> cd frontend
+> ```bash
+> !#idle-annie
 > yarn install
 > yarn dev
-> 
+> ```
 
-Visit: [http://localhost:5173](http://localhost:5173)
+:bug: Open up spotify before selecting any songs!
+🌎 Visit: [http://localhost:5173](http://localhost:5173)
 
 ---
 
@@ -103,10 +122,12 @@ Visit: [http://localhost:5173](http://localhost:5173)
 Create a \`.env\` file inside the \`proxy/\` directory:
 
 > ⚙️ .env file
-> VITE_SPOTIFY_CLIENT_ID=your_spotify_client_id
-> VITE_SPOTIFY_CLIENT_SECRET=your_spotify_client_secret
-> SPOTIFY_REDIRECT_URI=http://localhost:5173/callback
->
+> ```bash
+> !#idle-annie
+> echo "VITE_SPOTIFY_CLIENT_ID=your_spotify_client_id" > .env
+> echo "VITE_SPOTIFY_CLIENT_ID=your_spotify_client_secret" >> .env
+> echo "SPOTIFY_REDIRECT_URI=http://localhost:5173/callback" >> .env
+>```
 
 You'll also need to add your spotify redirect uri to the list of redirect apis on your spotify developer dashboard!
 

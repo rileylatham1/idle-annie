@@ -4,7 +4,7 @@ echo "🌀 Starting Spotify Explorer..."
 
 echo "📦 Installing dependencies..."
 # Install Python dependencies
-# uv pip install -r spotify-backend-service/requirements.txt
+uv pip install -r spotify-backend-service/requirements.txt
 source ./venv/bin/activate
 
 # Start gRPC server in background
