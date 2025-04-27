@@ -42,20 +42,14 @@ export const FocusedTrackScene: React.FC<Props> = ({ track, onBack }) => {
     <group>
       {/* Spinning record */}
       <mesh ref={recordRef} position={[0, 0, 0]} onClick={startSpin}>
-        <circleGeometry args={[2, 64]} />
+        <circleGeometry args={[5, 100]} />
         <meshStandardMaterial map={texture} />
         <ambientLight intensity={0.3} />
         <pointLight position={[5, 5, 5]} intensity={1.2} />
       </mesh>
 
-      {/* Placeholder lyrics panel */}
-      <mesh position={[0, -3, 0]}>
-        <planeGeometry args={[6, 2]} />
-        <meshBasicMaterial color="white" />
-      </mesh>
-
       {/* Back button (DOM element in scene) */}
-      <Html position={[0, 3, 0]}>
+      <Html position={[-15.5, 8, 0]}>
         <button
           onClick={onBack}
           style={{
