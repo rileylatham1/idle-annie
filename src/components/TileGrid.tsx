@@ -46,38 +46,49 @@ export const TileGrid: React.FC<TileGridProps> = ({
   const halfGridCols = gridCols / 2
   const halfGridRows = gridRows / 2
 
+  // Pad tracks to fill the grid completely
+  const paddedTracks = [...tracks]
+  while (paddedTracks.length < gridCols * gridRows) {
+    paddedTracks.push(tracks[paddedTracks.length % tracks.length])
+  }
+
   useFrame(() => {
     if (!loaded) return
-  
+
     // Set boundaries based on grid size
-    const boundaryMargin = tileSize
-    const maxX = (gridCols / 2) * tileSize + boundaryMargin
-    const minX = -maxX
-    const maxZ = (gridRows / 2) * tileSize + boundaryMargin
-    const minZ = -maxZ
-  
-    // Clamp camera position
-    camera.position.x = THREE.MathUtils.clamp(camera.position.x, minX, maxX)
-    camera.position.z = THREE.MathUtils.clamp(camera.position.z, minZ, maxZ)
-  
+    const gridWidth = gridCols * tileSize
+    const gridDepth = gridRows * tileSize
+
+    // Wrap camera position for infinite effect
+    if (camera.position.x < -gridWidth / 2) {
+      camera.position.x += gridWidth
+    } else if (camera.position.x > gridWidth / 2) {
+      camera.position.x -= gridWidth
+    }
+    if (camera.position.z < -gridDepth / 2) {
+      camera.position.z += gridDepth
+    } else if (camera.position.z > gridDepth / 2) {
+      camera.position.z -= gridDepth
+    }
+
     raycaster.setFromCamera(pointer, camera)
     const intersects = raycaster.intersectObjects(tileRefs.current)
     const hovered = intersects[0]?.object
     const hoverPos = hovered?.position.clone() ?? null
-  
+
     for (let i = 0; i < totalTiles; i++) {
       const row = Math.floor(i / gridCols)
       const col = i % gridCols
-  
+
       const x = (col - halfGridCols) * tileSize
       const z = (row - halfGridRows) * tileSize
-  
+
       const tile = tileRefs.current[i]
       if (!tile) continue
-  
+
       const targetPos = new THREE.Vector3(x, baseHeight, z)
       tile.position.lerp(targetPos, 0.1)
-  
+
       let targetY = baseHeight
       if (hoverPos) {
         const tilePos2D = new THREE.Vector2(tile.position.x, tile.position.z)
@@ -87,7 +98,7 @@ export const TileGrid: React.FC<TileGridProps> = ({
         const proximityFactor = Math.max(0, 1 - dist / maxDist)
         targetY = baseHeight + proximityFactor * hoverHeight
       }
-  
+
       tile.position.y += (targetY - tile.position.y) * 0.1
     }
   })
@@ -96,22 +107,33 @@ export const TileGrid: React.FC<TileGridProps> = ({
 
   return (
     <>
-      {Array.from({ length: REPEAT_GRID_COUNT ** 2 }).flatMap((_, repeatIndex) =>
-        tracks.map((track, i) => {
-          const globalIndex = repeatIndex * tracks.length + i
-          return (
-            <Tile
-              key={globalIndex}
-              ref={(el) => {
-                if (el) tileRefs.current[globalIndex] = el
-              }}
-              texture={textures.current[i]!}
-              tileSize={tileSize}
-              track={track}
-              onClick={() => onPlayTrack?.(track)}
-            />
-          )
-        })
+      {Array.from({ length: REPEAT_GRID_COUNT }).flatMap((_, xRepeat) =>
+        Array.from({ length: REPEAT_GRID_COUNT }).flatMap((_, zRepeat) =>
+          paddedTracks.map((track, i) => {
+            const row = Math.floor(i / gridCols)
+            const col = i % gridCols
+            const x =
+              (col - halfGridCols) * tileSize +
+              (xRepeat - Math.floor(REPEAT_GRID_COUNT / 2)) * gridCols * tileSize
+            const z =
+              (row - halfGridRows) * tileSize +
+              (zRepeat - Math.floor(REPEAT_GRID_COUNT / 2)) * gridRows * tileSize
+            const globalIndex = (xRepeat * REPEAT_GRID_COUNT + zRepeat) * paddedTracks.length + i
+            return (
+              <Tile
+                key={globalIndex}
+                ref={(el) => {
+                  if (el) tileRefs.current[globalIndex] = el
+                }}
+                texture={textures.current[i % textures.current.length]!}
+                tileSize={tileSize}
+                track={track}
+                position={[x, baseHeight, z]}
+                onClick={() => onPlayTrack?.(track)}
+              />
+            )
+          })
+        )
       )}
     </>
   )

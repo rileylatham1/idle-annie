@@ -6,6 +6,7 @@ service SpotifyAuth {
   rpc ExchangeCode (AuthCodeRequest) returns (AuthResponse)  {}
   rpc GetLikedTracks(LikedTracksRequest) returns (LikedTracksResponse) {}
   rpc PlayNextTrack(PlayNextTrackRequest) returns (PlayNextTrackResponse) {}
+  rpc GetAudioVisualData(GetAudioVisualDataRequest) returns (GetAudioVisualDataResponse);
 }
 
 message AuthCodeRequest {
@@ -54,4 +55,19 @@ message PlayNextTrackRequest {
 
 message PlayNextTrackResponse {
   bool success = 1;
+}
+
+message GetAudioVisualDataRequest {
+  string access_token = 1;
+  string track_id = 2;
+}
+
+message GetAudioVisualDataResponse {
+  bool success = 1;
+  float energy = 2;
+  float valence = 3;
+  float tempo = 4;
+  float danceability = 5;
+  repeated double beats = 6;
+  repeated double mfccs = 7;
 }

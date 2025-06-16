@@ -5,7 +5,7 @@ echo "🌀 Starting Spotify Explorer..."
 echo "📦 Installing dependencies..."
 # Install Python dependencies
 uv pip install -r spotify-backend-service/requirements.txt
-source ./venv/bin/activate
+source ./spotify-backend-service/.venv/bin/activate
 
 # Start gRPC server in background
 cd spotify-backend-service
@@ -15,7 +15,7 @@ cd ..
 
 # Start FastAPI proxy in background
 cd spotify-backend-service
-source ./venv/bin/activate
+source ./.venv/bin/activate
 echo "🌐 Starting FastAPI proxy server..."
 uvicorn proxy:app --reload &
 cd ..

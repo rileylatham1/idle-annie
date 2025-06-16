@@ -49,6 +49,11 @@ class SpotifyAuthStub(object):
                 request_serializer=protos_dot_spotify__pb2.PlayNextTrackRequest.SerializeToString,
                 response_deserializer=protos_dot_spotify__pb2.PlayNextTrackResponse.FromString,
                 _registered_method=True)
+        self.GetAudioVisualData = channel.unary_unary(
+                '/spotify_grpc.SpotifyAuth/GetAudioVisualData',
+                request_serializer=protos_dot_spotify__pb2.GetAudioVisualDataRequest.SerializeToString,
+                response_deserializer=protos_dot_spotify__pb2.GetAudioVisualDataResponse.FromString,
+                _registered_method=True)
 
 
 class SpotifyAuthServicer(object):
@@ -72,6 +77,12 @@ class SpotifyAuthServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def GetAudioVisualData(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_SpotifyAuthServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -89,6 +100,11 @@ def add_SpotifyAuthServicer_to_server(servicer, server):
                     servicer.PlayNextTrack,
                     request_deserializer=protos_dot_spotify__pb2.PlayNextTrackRequest.FromString,
                     response_serializer=protos_dot_spotify__pb2.PlayNextTrackResponse.SerializeToString,
+            ),
+            'GetAudioVisualData': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetAudioVisualData,
+                    request_deserializer=protos_dot_spotify__pb2.GetAudioVisualDataRequest.FromString,
+                    response_serializer=protos_dot_spotify__pb2.GetAudioVisualDataResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -172,6 +188,33 @@ class SpotifyAuth(object):
             '/spotify_grpc.SpotifyAuth/PlayNextTrack',
             protos_dot_spotify__pb2.PlayNextTrackRequest.SerializeToString,
             protos_dot_spotify__pb2.PlayNextTrackResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetAudioVisualData(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/spotify_grpc.SpotifyAuth/GetAudioVisualData',
+            protos_dot_spotify__pb2.GetAudioVisualDataRequest.SerializeToString,
+            protos_dot_spotify__pb2.GetAudioVisualDataResponse.FromString,
             options,
             channel_credentials,
             insecure,

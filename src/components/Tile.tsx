@@ -12,16 +12,18 @@ type TileProps = {
     uri: string
   }
   onClick?: (uri: string) => void
+  position?: [number, number, number] // <-- Added position prop
 }
 
 export const Tile = forwardRef<Mesh, TileProps>(
-  ({ texture, tileSize = 2, track, onClick }, ref) => {
+  ({ texture, tileSize = 2, track, onClick, position }, ref) => {
     const [hovered, setHovered] = useState(false)
     const depth = 0.3
 
     return (
       <mesh
         ref={ref}
+        position={position} // <-- Pass position to mesh
         onPointerOver={() => setHovered(true)}
         onPointerOut={() => setHovered(false)}
         onClick={() => onClick?.(track.uri)}

@@ -27,7 +27,6 @@ class SpotifyAuthServicer(pb2_grpc.SpotifyAuthServicer):
                 raise ValueError("Missing Spotify CLIENT_ID or CLIENT_SECRET")
 
             auth_code = request.code
-            print(f"Received auth code: {auth_code}")
             logging.info(f"Received auth code: {auth_code}")
 
             token_url = "https://accounts.spotify.com/api/token"
@@ -43,9 +42,6 @@ class SpotifyAuthServicer(pb2_grpc.SpotifyAuthServicer):
             }
 
             response = requests.post(token_url, headers=auth_header, data=data)
-            logging.info(f"Spotify API response status: {response.status_code}")
-            logging.info(f"Spotify API response body: {response.text}")
-
             if response.status_code == 200:
                 token_data = response.json()
                 session_token = token_data['access_token']
@@ -56,7 +52,6 @@ class SpotifyAuthServicer(pb2_grpc.SpotifyAuthServicer):
                 return pb2.AuthResponse(session_token="", success=False)
 
         except Exception as e:
-            logging.exception("Unexpected error in ExchangeCode")
             context.set_details(str(e))
             context.set_code(grpc.StatusCode.INTERNAL)
             return pb2.AuthResponse(session_token="", success=False)
@@ -102,9 +97,6 @@ class SpotifyAuthServicer(pb2_grpc.SpotifyAuthServicer):
                         images=album_images
                     )
 
-                    # Log for debugging
-                    logging.info(f"Track: {track_data.get('name', '')}, Track ID: {track_data.get('id', '')}, Artist: {artist_name}, Album: {album_name}")
-
                     # Append to results
                     all_tracks.append(pb2.Track(
                         name=track_data.get("name", ""),
@@ -119,7 +111,6 @@ class SpotifyAuthServicer(pb2_grpc.SpotifyAuthServicer):
             return pb2.LikedTracksResponse(tracks=all_tracks, success=True)
 
         except Exception as e:
-            logging.exception("Failed to fetch liked tracks")
             context.set_details(str(e))
             context.set_code(grpc.StatusCode.INTERNAL)
             return pb2.LikedTracksResponse(success=False)
@@ -166,6 +157,75 @@ class SpotifyAuthServicer(pb2_grpc.SpotifyAuthServicer):
             context.set_details(str(e))
             context.set_code(grpc.StatusCode.INTERNAL)
             return pb2.PlayNextTrackResponse(success=False)
+
+    def GetAudioVisualData(self, request, context):
+        try:
+            # ── 0. unpack request ─────────────────────────────────────────────────
+            spotify_token = request.access_token
+            track_id      = request.track_id
+
+            # ── 1. Spotify → ISRC ────────────────────────────────────────────────
+            track_url = f"https://api.spotify.com/v1/tracks/{track_id}"
+            headers   = {"Authorization": f"Bearer {spotify_token}"}
+            track_resp = requests.get(track_url, headers=headers)
+            track_resp.raise_for_status()
+            isrc = track_resp.json().get("external_ids", {}).get("isrc")
+            if not isrc:
+                raise ValueError("Spotify track has no ISRC")
+
+            # ── 2. ISRC → MBID (MusicBrainz) ─────────────────────────────────────
+            mb_params = {"query": f"isrc:{isrc}", "fmt": "json", "limit": 1}
+            mb_resp   = requests.get(
+                "https://musicbrainz.org/ws/2/recording",
+                params=mb_params,
+                headers={"User-Agent": "YourAppName/1.0"},
+            )
+            mb_resp.raise_for_status()
+            recordings = mb_resp.json().get("recordings", [])
+            if not recordings:
+                raise ValueError("MusicBrainz had no recording for this ISRC")
+            mbid = recordings[0]["id"]
+
+            # ── 3. AcousticBrainz high‑level  ────────────────────────────────────
+            ab_high = requests.get(
+                f"https://acousticbrainz.org/api/v1/{mbid}/high-level"
+            )
+            ab_high.raise_for_status()
+            hl = ab_high.json().get("highlevel", {})
+
+            energy        = hl.get("energy",        {}).get("value", 0.4)
+            danceability  = hl.get("danceability",  {}).get("value", 0.4)
+            valence       = hl.get("happy",         {}).get("value", 0.4)
+            tempo         = hl.get("bpm",           {}).get("value", 0.4)
+
+            # ── 4. AcousticBrainz low‑level beats  ───────────────────────────────
+            ab_low_url = f"https://acousticbrainz.org/api/v1/{mbid}/low-level"
+            ab_low_resp = requests.get(ab_low_url)
+            if ab_low_resp.status_code != 200:
+                context.set_details(f"Failed to get AcousticBrainz low-level data: {ab_low_resp.text}")
+                context.set_code(grpc.StatusCode.INTERNAL)
+                return pb2.GetAudioVisualDataResponse(success=False)
+            lowlevel = ab_low_resp.json()
+
+            beats = lowlevel.get("rhythm", {}).get("beats_position", [])
+            mfccs = lowlevel.get("lowlevel", {}).get("mfcc", []).get("mean", [])
+
+            # ── 5. Build and return gRPC response  ───────────────────────────────
+            return pb2.GetAudioVisualDataResponse(
+                success       = True,
+                energy        = energy,
+                valence       = valence,
+                tempo         = tempo,
+                danceability  = danceability,
+                beats         = beats,
+                mfccs         = mfccs,
+            )
+
+        except Exception as e:
+            logging.exception("Error in GetAudioVisualData")
+            context.set_code(grpc.StatusCode.INTERNAL)
+            context.set_details(str(e))
+            return pb2.GetAudioVisualDataResponse(success=False)
 
     def _get_basic_auth(self):
         # Encodes client_id:client_secret in base64

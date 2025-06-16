@@ -10,8 +10,11 @@ import {
 import { fetchUserLikedTracks } from './hooks/spotifyApi'
 import { playNextTrack } from './hooks/spotifyPlayer'
 import { TrackInfo } from './types/spotifyTypes'
-import { FocusedTrackScene } from './components/FocusedTrackScene'
+// import { FocusedTrackScene } from './components/FocusedTrackScene'
+import AudioParticleField  from './components/AudioParticleField'
 import { CameraFlyTransition } from './components/CameraFlyTransition' // <-- we'll add this!
+import { useAudioAnalysis } from './hooks/spotifyAudioAnalysis'
+import { Html } from '@react-three/drei'
 import './index.css'
 
 type SceneState = 'grid' | 'transition' | 'focused' | 'transition-out'
@@ -36,6 +39,16 @@ const App: React.FC = () => {
   const [scene, setScene] = useState<SceneState>('grid')
   const [activeTrack, setActiveTrack] = useState<TrackInfo | null>(null)
 
+  // Get access token from localStorage
+  const accessToken = localStorage.getItem('access_token') || null
+
+  // Fetch audio analysis when a track is focused
+  const { analysis, loading: analysisLoading } = useAudioAnalysis(
+    scene === 'focused' && activeTrack ? activeTrack : null,
+    accessToken
+  )
+  console.log("Active track:", activeTrack, "Analysis:", analysis, "Loading:", analysisLoading
+  )
   useEffect(() => {
     const init = async () => {
       let token = getAccessToken()
@@ -118,14 +131,31 @@ const App: React.FC = () => {
       }} />}
 
       {/* Show FocusedTrackScene */}
-      {(scene === 'focused' || scene === 'transition' || scene === 'transition-out') && activeTrack && (
-        <FocusedTrackScene
-          track={activeTrack}
-          onBack={() => {
-            setScene('transition-out')
-          }}
-        />
-      )}
+    {scene === 'focused' && activeTrack && (
+      analysis && !analysisLoading ? (
+        <Html fullscreen>
+          <AudioParticleField
+            energy={analysis.energy}
+            valence={analysis.valence}
+            tempo={analysis.tempo}
+            beats={analysis.beats}
+            danceability={analysis.danceability}
+            mfccs={analysis.mfccs}
+            onBack={() => setScene('transition-out')}
+          />
+        </Html>
+      ) : (
+        <Html center>
+          <div style={{ color: 'white' }}>Loading audio analysis...</div>
+          <button
+            onClick={() => setScene('transition-out')}
+            style={{ marginTop: '1rem', padding: '0.5rem 1rem', background: 'black', color: 'white' }}
+          >
+            Back to grid
+          </button>
+        </Html>
+      )
+    )}
     </Canvas>
   )
 }

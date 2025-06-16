@@ -5,13 +5,15 @@ import grpc
 import protos.spotify_pb2 as pb2
 import protos.spotify_pb2_grpc as pb2_grpc
 from typing import List
+import httpx
+from utils import get_acousticbrainz_features
 
 app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
+    allow_credentials=False,  # Must be False if using "*"
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -93,3 +95,37 @@ def play_next_track(request: PlayNextTrackRequest):
         raise HTTPException(status_code=e.code().value[0], detail=e.details())
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+class GetAudioVisualData(BaseModel):
+    access_token: str
+    track_id: str
+
+@app.post("/audio-analysis")
+async def audio_analysis(request: GetAudioVisualData):
+    print(">>> /audio-analysis endpoint hit")
+    track_id = request.track_id
+    access_token = request.access_token
+    if not track_id or not access_token:
+        return {"success": False, "error": "Missing track_id or access_token"}
+
+    async with httpx.AsyncClient() as client:
+        # Step 1: Get Spotify track metadata
+        track_url = f"https://api.spotify.com/v1/tracks/{track_id}"
+        headers = {"Authorization": f"Bearer {access_token}"}
+        track_resp = await client.get(track_url, headers=headers)
+        if track_resp.status_code != 200:
+            return {"success": False, "error": f"Spotify track metadata error: {track_resp.text}"}
+        track_data = track_resp.json()
+
+    isrc = track_data.get("external_ids", {}).get("isrc")
+    print(isrc)
+
+    if not isrc:
+        raise Exception("No ISRC found in Spotify metadata")
+
+    try:
+        features = await get_acousticbrainz_features(isrc)
+        print(f"AcousticBrainz features: {features}")
+        return {"success": True, **features}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
